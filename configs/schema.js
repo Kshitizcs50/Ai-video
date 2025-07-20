@@ -6,4 +6,4 @@ export const Users=pgTable('users',{
     email:varchar('email').notNull(),
     imageUrl:varchar('imageUrl'),
     subscription:boolean('subscription').default(false)
-})
+});
