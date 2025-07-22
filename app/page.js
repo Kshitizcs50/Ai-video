@@ -1,4 +1,5 @@
 'use client';
+
 //import { Button } from "@/components/ui/button";
 import { SignedIn, UserButton } from "@clerk/nextjs";
 //import Image from "next/image";
@@ -9,8 +10,7 @@ export default function Home() {
   
       kkjk
       <SignedIn><UserButton/></SignedIn>
-       <UserButton/>
-       <UserButton/>
+       <Button>kk</Button>
     </div>
   );
 }
