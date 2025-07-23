@@ -1,4 +1,7 @@
+"use client"
 import { CircleUser, FileVideo, PanelsTopLeft, ShieldPlus } from 'lucide-react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import React from 'react'
 
 function SideNav() {
@@ -11,35 +14,40 @@ function SideNav() {
         },
     
         {
-        id:1,
+        id:2,
         name:'Create New',
-        path:'/create-new',
+        path:'/dashboard/create-new',
         icon:FileVideo
         },
     
         {
-        id:1,
+        id:3,
         name:'Upgrade',
         path:'/upgrade',
         icon:ShieldPlus
         },
     
         {
-        id:1,
+        id:4,
         name:'Account',
         path:'/account',
         icon:CircleUser
         }
     ]
+
+    const path=usePathname();
   return (
     <div className='w-64 h-screen shadow-md p-5'>
         <div className='grid gap-2'>
             {MenuOption.map((item,index)=>(
-                <div className='flex items-center gap-3 p-3
-                hover:bg-purple-800 hover:text-white'>
+                <Link href={item.path} key={index}>
+                <div className={`flex items-center gap-3 p-3
+                hover:bg-purple-800 hover:text-white
+                rounded-md cursor-pointer ${path==item.path&&'bg-purple-700  text-white'}`}>
                     <item.icon/>
                     <h2>{item.name}</h2>
                 </div>
+                </Link>
             ))}
         </div>
     </div>
