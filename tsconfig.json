@@ -34,7 +34,7 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "app/components/ui/textarea.jsx"  ],
   "exclude": [
     "node_modules"
   ]
