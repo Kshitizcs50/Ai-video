@@ -36,6 +36,7 @@ function SelectStyle({onUserSelect}) {
                 ${selectedOption==item.name&& 'border-purple-900 border-4'}`}>
                     <Image
                       src={item.image}
+                      alt='item.image'
                       width={100}
                       height={100}
                       className='h-48 object-cover rounded-lg w-full'

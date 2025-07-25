@@ -34,7 +34,7 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
-, "app/components/ui/textarea.jsx"  ],
+, "app/components/ui/textarea.jsx", "configs/AiModel.js"  ],
   "exclude": [
     "node_modules"
   ]
