@@ -10,6 +10,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { Item } from '@radix-ui/react-select';
 import { Captions } from 'lucide-react';
 import { VideoDataContext } from '@/app/_context/VideoDataContext';
+import PlayerDialog from '../_components/PlayerDialog';
+import { VideoData } from '@/configs/schema';
 
 
 const scriptData='The city of Pylons hummed with a chaotic energy, a symphony of rain and neon.Unit 734 felt a strange pang of something akin to sadness as it observed the flowers demise.Elara, a scavenger, saw the rift appear in the sky – a tear in the fabric of reality.Together, the robot and the girl stepped into the unknown.They emerged into a world beyond comprehension – a vibrant, alien paradise.';
@@ -34,6 +36,8 @@ function createNew() {
   const [audioFileUrl,setAudioFileUrl]=useState();
   const[captions,setCaptions]=useState();
   const[imageList,setImageList]=useState();
+  const[playVideo,setPlayVideo]=useState(true);
+  const[videoId,setvideoId]=useState(1);
   const {videoData,setVideoData}=useContext(VideoDataContext);
   const onHandInputChange=(fieldName,fieldValue)=>{
     console.log(fieldName,fieldValue)
@@ -151,10 +155,14 @@ function createNew() {
       captions:videoData?.captions,
       imageList:videoData?.imageList,
       createdBy:user?.primaryEmailAddress?.emailAddress
-    }).returning
+    }).returning({id:VideoData?.id})
+    setvideoId(result[0].id);
+    setPlayVideo(true)
+    console.log(result);
+    SetLoading(false);
   }
 
-  }
+  
   return (
     <div className='md:px-20'>
     <h2 className='font-bold text-4xl text-purple-950 text-center'>CREATE</h2>
@@ -170,8 +178,9 @@ function createNew() {
     <Button className='mt-10 w-full' onClick={onCreateClickHandler}>Create short video</Button>
 
     <CustomLoading loading={loading}/>
+    <PlayerDialog playVideo={playVideo} videiId={videoId}/>
     </div>
   )
 
-
+}
 export default createNew
