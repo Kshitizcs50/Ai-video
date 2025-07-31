@@ -1,5 +1,5 @@
 "use client"
-import React,{useState} from 'react'
+import React,{useContext, useEffect, useState} from 'react'
 import SelectTopic from './_components/SelectTopic'
 import SelectStyle from './_components/SelectStyle';
 import SelectDuration from './_components/SelectDuration';
@@ -8,6 +8,8 @@ import axios from 'axios';
 import CustomLoading from './_components/CustomLoading';
 import { v4 as uuidv4 } from 'uuid';
 import { Item } from '@radix-ui/react-select';
+import { Captions } from 'lucide-react';
+import { VideoDataContext } from '@/app/_context/VideoDataContext';
 
 
 const scriptData='The city of Pylons hummed with a chaotic energy, a symphony of rain and neon.Unit 734 felt a strange pang of something akin to sadness as it observed the flowers demise.Elara, a scavenger, saw the rift appear in the sky – a tear in the fabric of reality.Together, the robot and the girl stepped into the unknown.They emerged into a world beyond comprehension – a vibrant, alien paradise.';
@@ -30,7 +32,9 @@ function createNew() {
   const[loading,SetLoading]=useState(false);
   const [videoScript,setVideoScript]=useState();
   const [audioFileUrl,setAudioFileUrl]=useState();
+  const[captions,setCaptions]=useState();
   const[imageList,setImageList]=useState();
+  const {videoData,setVideoData}=useContext(VideoDataContext);
   const onHandInputChange=(fieldName,fieldValue)=>{
     console.log(fieldName,fieldValue)
   setFormData(prev=>({
@@ -40,7 +44,7 @@ function createNew() {
   };
   const onCreateClickHandler=()=>{
   GetVideoScript();
-  GenerateAudioFile(scriptData);
+ // GenerateAudioFile(scriptData);
   //GenerateImage();
   };
   //get video script
@@ -48,51 +52,61 @@ function createNew() {
     SetLoading(true);
     const prompt='Write a script to generate '+formData.duration+' video on topic: '+formData.topic+' along with AI image prompt in '+formData.imageStyle+' format for each scene and give me result in JSON format with imagePrompt and ContentText as field, No Plain text'
      console.log(prompt)
-      const result=await axios.post('/api/get-video-script',{
+      const resp=await axios.post('/api/get-video-script',{
       prompt:prompt
-   }).then(resp=>{
-    console.log(resp.data.result);
-    setVideoScript(resp.data.result);
-    GenerateAudioFile(resp.data.result);
-    SetLoading(false);
-   //
    });
+   if(resp.data.result){
+    console.log(resp.data.result);
+    setVideoScript(prev=>({
+      ...prev,
+      'videoScript':resp.data.result}));
+   await GenerateAudioFile(resp.data.result);
+   // SetLoading(false);
+   //
+   };
 
   }
   const GenerateAudioFile=async(videoScriptData)=>{
     SetLoading(true)
     let script='';
     const id=uuidv4();
-  //  videoScriptData.forEach(item=>{
-  //    script=script+item.ContentText+'';
-  // })
+    videoScriptData.forEach(item=>{
+     script=script+item.ContentText+'';
+   })
     
-    await axios.post('/api/generate-audio',{
-      text:videoScriptData,
+    const resp=await axios.post('/api/generate-audio',{
+      text:script,
       id:id
-    }).then(resp=>{
-      console.log(resp.data);
+    }) ;
+     setVideoScript(prev=>({
+      ...prev,
+      'audioFileUrl':resp.data.result}));
       setAudioFileUrl(resp.data.result);
       resp.data.result&&GenerateAudioCaption(resp.data.result)
-    })
-    SetLoading(false);
+    
+   // SetLoading(false);
   }
 
-  const GenerateAudioCaption=async(fileUrl)=>{
+  const GenerateAudioCaption=async(fileUrl,videoScriptData)=>{
     SetLoading(true);
-    await axios.post('/api/generate-caption',{
+    console.log(fileUrl)
+    const resp=await axios.post('/api/generate-caption',{
       audioFileUrl:fileUrl
-    }).then(resp=>{
-      console.log(resp.data.result);
+    }).
       setCaptions(resp?.data?.result);
-      SetLoading(false);
-    })
+        setVideoScript(prev=>({
+      ...prev,
+      'captions':resp.data.result}));
+      resp.data.result&&GenerateImage(videoScriptData);
+      //SetLoading(false);
+  
     console.log(videoScript,Captions,audioFileUrl);
   }
 
-  const GenerateImage=()=>{
+  const GenerateImage=async(videoScriptData)=>{
     let images=[];
-    videoScript.forEach(element => {
+    /*console.log("--",videoScriptData)
+    videoScriptData.forEach(element => {
       
     });(async(element)=>{
        await axios.post('/api/generate-image', {
@@ -102,9 +116,43 @@ function createNew() {
         images.push(resp.data.result);
        })
     })
-    console.log(images);
+    console.log(images,videoScript,audioFileUrl,captions);*/
+    for(const element of videoScriptData){
+      try{
+        const resp=await axios.post('/api/generate-image',{
+          prompt:element.imagePrompt
+        });
+        console.log(resp.data.result);
+        images.push(resp.data.result)
+      }catch(e){
+        console.log('Error'+e);
+      }
+    }
+      setVideoScript(prev=>({
+      ...prev,
+      'imageList':images}));
     setImageList(images);
     SetLoading(false);
+
+  }
+  useEffect(()=>{
+    console.log(videoData);
+    if(Object.keys(videoData).length==4)
+    {
+      SaveVideoData(videoData)
+    }
+  },[videoData])
+
+  const SaveVideoData=async(videoData)=>{
+    SetLoading(true)
+    const result=await db.insert(VideoData).values({
+      script:videoData?.videoScript,
+      audioFileUrl:videoData?.audioFileUrl,
+      captions:videoData?.captions,
+      imageList:videoData?.imageList,
+      createdBy:user?.primaryEmailAddress?.emailAddress
+    }).returning
+  }
 
   }
   return (
@@ -124,6 +172,6 @@ function createNew() {
     <CustomLoading loading={loading}/>
     </div>
   )
-}
+
 
 export default createNew
