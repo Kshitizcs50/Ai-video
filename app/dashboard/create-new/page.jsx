@@ -11,7 +11,8 @@ import { Item } from '@radix-ui/react-select';
 import { Captions } from 'lucide-react';
 import { VideoDataContext } from '@/app/_context/VideoDataContext';
 import PlayerDialog from '../_components/PlayerDialog';
-import { VideoData } from '@/configs/schema';
+import { Users, VideoData } from '@/configs/schema';
+import { useRouter } from 'next/navigation';
 
 
 const scriptData='The city of Pylons hummed with a chaotic energy, a symphony of rain and neon.Unit 734 felt a strange pang of something akin to sadness as it observed the flowers demise.Elara, a scavenger, saw the rift appear in the sky – a tear in the fabric of reality.Together, the robot and the girl stepped into the unknown.They emerged into a world beyond comprehension – a vibrant, alien paradise.';
@@ -38,15 +39,22 @@ function createNew() {
   const[imageList,setImageList]=useState();
   const[playVideo,setPlayVideo]=useState(true);
   const[videoId,setvideoId]=useState(1);
+  const router=useRouter();
   const {videoData,setVideoData}=useContext(VideoDataContext);
+  const {user}=useUser();
+  const {userDetail,setUserDetail}=useContext(UserDetailContext);
   const onHandInputChange=(fieldName,fieldValue)=>{
     console.log(fieldName,fieldValue)
-  setFormData(prev=>({
+  setFormData(prev=>({ 
     ...prev,
     [fieldName]:fieldValue
   }));
   };
   const onCreateClickHandler=()=>{
+    if(!userDetail?.credits>=0){
+      toast("pls upgrade created")
+      return;
+    }
   GetVideoScript();
  // GenerateAudioFile(scriptData);
   //GenerateImage();
@@ -156,12 +164,29 @@ function createNew() {
       imageList:videoData?.imageList,
       createdBy:user?.primaryEmailAddress?.emailAddress
     }).returning({id:VideoData?.id})
+    await UpdateUserCredits();
     setvideoId(result[0].id);
     setPlayVideo(true)
     console.log(result);
     SetLoading(false);
   }
+  const UpdateUserCredits = async () => {
+  const result = await db
+    .update(Users)
+    .set({
+      credits: userDetail?.credits - 10,
+    })
+    .where(eq(Users.email, user?.primaryEmailAddress?.emailAddress));
+    console.log(result);
+    setUserDetail(prev=>({
+      ...prev,
+      "credits":userDetail?.credits-10
+    }))
 
+  setVideoData(null);
+};
+
+ 
   
   return (
     <div className='md:px-20'>

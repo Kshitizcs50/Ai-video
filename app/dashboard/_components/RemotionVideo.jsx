@@ -2,6 +2,7 @@ import { PgSequence } from 'drizzle-orm/pg-core';
 import React from 'react'
 import {AbsoluteFill,Sequence} from 'remotion'
 import SelectDuration from '../create-new/_components/SelectDuration';
+import { transform } from 'next/dist/build/swc/generated-native';
 function RemotionVideo(script,imageList,audioFileUrl,captions,setDurationInFrame) {
   const {fps}=useVideoConfig();
   const frame=useCurrentFrame();
@@ -16,20 +17,32 @@ function RemotionVideo(script,imageList,audioFileUrl,captions,setDurationInFrame
     const currentCaption=captions.find((word)=>currentTime>=word.start && currentTime<=word.end)
     return currentCaption?currentCaption?.text:'';
   }
-  return (
+  return script&&(
     <AbsoluteFill style={{
       backgroundColor:'black'
     }}>
-      {imageList?.map((item,index)=>(
+      {imageList?.map((item,index)=>
+      { 
+      const startTime=((index*getDurationFrame())/imageList?.length);
+      const duration=getDurationFrame();
+
+      const scale=(index)=>interpolate(
+        frame,
+        [startTime,startTime+duration/2,startTime+duration],
+        index%2==0?[1,1.8,1]:[1.8,1,1.8],
+        {extrapolateleft:'clamp',extrapolateRight:'clamp'}
+      );
+      return(
         <>
-        <Sequence key={index} from={((index*getDurationFrame())/imageList?.length)} durationInFrames={getDurationFrame()}>
+        <Sequence key={index} from={startTime} durationInFrames={getDurationFrame()}>
          <AbsoluteFill style={{justifyContent:'center',alignItems:'center'}}>
          <Img
          src={item}
          style={{
           width:'100%',
           height:'100%',
-          objectFit:'cover'
+          objectFit:'cover',
+          transform:`scale(${scale})`
          }}
          />
          <AbsoluteFill style={{
@@ -47,7 +60,7 @@ function RemotionVideo(script,imageList,audioFileUrl,captions,setDurationInFrame
          </AbsoluteFill>
         </Sequence>
         </>
-      ))}
+      )})}
        <Audio src={audioFileUrl}/>
     </AbsoluteFill>
   )
